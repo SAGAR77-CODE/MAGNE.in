@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MANGNE | Collection Gallery</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-cream: #f4f2ee;
+            --text-dark: #2d2d2d;
+            --accent-rose: #a67c77;
+            --white: #ffffff;
+            --radius-pill: 50px;
+            --radius-card: 24px;
+            --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-cream);
+            color: var(--text-dark);
+            scroll-behavior: smooth;
+            overflow: hidden;
+        }
+
+        /* --- PRELOADER STYLES --- */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s;
+        }
+
+        .loader-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .main-loader-logo {
+            width: 280px;
+            height: auto;
+            opacity: 0;
+            transform: scale(0.92);
+            animation: logoArtisticReveal 2s ease forwards;
+            margin-bottom: 40px;
+        }
+
+        .line-container {
+            width: 200px;
+            height: 1px;
+            background: rgba(212, 175, 55, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-line {
+            position: absolute;
+            width: 0%;
+            height: 100%;
+            background: #d4af37;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: lineGrow 2.5s cubic-bezier(0.1, 0.5, 0.5, 1) forwards;
+        }
+
+        @keyframes logoArtisticReveal {
+            0% { opacity: 0; transform: scale(0.92); filter: blur(10px); }
+            100% { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
+
+        @keyframes lineGrow {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        .loaded-state #preloader {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loaded-state body {
+            overflow: auto;
+        }
+
+        /* --- Navigation --- */
+        header {
+            padding: 15px 5%;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 35px;
+            background-color: var(--white);
+            border-radius: var(--radius-pill);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-decoration: none;
+            color: var(--text-dark);
+            text-transform: uppercase;
+        }
+
+        /* --- Search & Filters --- */
+        .controls {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 5%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        #searchInput {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 25px;
+            border-radius: var(--radius-pill);
+            border: 1px solid #ddd;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            background: var(--white);
+            border: 1px solid transparent;
+            padding: 8px 20px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: var(--accent-rose);
+            color: white;
+        }
+
+        /* --- Product Grid & Responsiveness --- */
+        .product-grid {
+            max-width: 1200px;
+            margin: 0 auto 80px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            padding: 0 5%;
+        }
+
+        .product-card {
+            background-color: var(--white);
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            transition: transform 0.4s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card.hidden { display: none; }
+
+        .product-card:hover { transform: translateY(-8px); }
+
+        .product-card img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            background-color: #eee;
+        }
+
+        .product-info {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .product-info h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .product-info p {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--accent-rose);
+            font-weight: 600;
+        }
+
+        /* --- Order Instruction Bar --- */
+        .buy-notice-bar {
+            background-color: #a67c77;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 14px;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+            z-index: 2000;
+            width: 100%;
+        }
+
+        .buy-notice-bar a {
+            color: white;
+            text-decoration: underline;
+            font-weight: 700;
+        }
+
+        /* --- Floating Buttons --- */
+        #backToTop {
+            position: fixed;
+            bottom: 40px;
+            right: 30px;
+            background: var(--accent-rose);
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .whatsapp-float {
+            position: fixed;
+            bottom: 40px;
+            left: 30px;
+            background-color: #25d366;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .whatsapp-float:hover {
+            background-color: #128c7e;
+            transform: scale(1.1);
+        }
+/* --- Updated Mobile Grid (2 Columns) --- */
+@media (max-width: 600px) {
+    .product-grid {
+        /* This changes the layout from 1 column to 2 columns */
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 15px; /* Smaller gap for tighter mobile screens */
+        padding: 0 10px;
+    }
+
+    .product-card img {
+        height: 180px; /* Reduced height to keep cards proportional */
+    }
+
+    .product-info {
+        padding: 12px 5px;
+    }
+
+    .product-info h4 {
+        font-size: 14px; /* Slightly smaller text for 2-column fit */
+    }
+
+    .logo {
+        font-size: 18px;
+    }
+}
+/* --- Footer Styles --- */
+.site-footer {
+    background-color: var(--white);
+    padding: 60px 5% 20px;
+    margin-top: 80px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 40px;
+}
+
+.footer-section h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: var(--text-dark);
+}
+
+.footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--accent-rose);
+    margin-bottom: 15px;
+}
+
+.footer-section p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #666;
+    max-width: 300px;
+}
+
+.footer-section ul {
+    list-style: none;
+}
+
+.footer-section ul li {
+    margin-bottom: 10px;
+}
+
+.footer-section ul li a {
+    text-decoration: none;
+    color: #666;
+    font-size: 14px;
+    transition: color 0.3s;
+}
+
+.footer-section ul li a:hover {
+    color: var(--accent-rose);
+}
+
+.social-icons a {
+    text-decoration: none;
+    color: var(--accent-rose);
+    font-weight: 500;
+    font-size: 14px;
+    margin-right: 15px;
+}
+
+.footer-bottom {
+    text-align: center;
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    font-size: 12px;
+    color: #999;
+    letter-spacing: 1px;
+}
+
+/* Mobile Responsive Footer */
+@media (max-width: 768px) {
+    .footer-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    
+    .footer-section p {
+        margin: 0 auto;
+    }
+}
+    </style>
+</head>
+<body>
+    <div id="preloader">
+        <div class="loader-wrapper">
+            <img src="logo.jpeg" alt="MANGNE" class="main-loader-logo">
+            <div class="line-container">
+                <div class="progress-line"></div>
+            </div>
+        </div>
+    </div>
+    <header>
+        <nav>
+            <a href="#" class="logo">MANGNE</a>
+            <div class="nav-links">
+                <span style="font-size: 12px; letter-spacing: 1px; color: var(--accent-rose);">Moments That Stick</span>
+            </div>
+        </nav>
+    </header>
+
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="Search collection...">
+        <div class="filter-group">
+            <button class="filter-btn active" onclick="filterCategory('all')">All</button>
+            <button class="filter-btn" onclick="filterCategory('cups')">Cups</button>
+            <button class="filter-btn" onclick="filterCategory('bowls')">Bowls</button>
+            <button class="filter-btn" onclick="filterCategory('plates')">Plates</button>
+            <button class="filter-btn" onclick="filterCategory('magnets')">Fridge Magnets</button>
+            <button class="filter-btn" onclick="filterCategory('organisers')">Jewellery Organisers</button>
+        </div>
+    </div>
+    <section class="product-grid" id="productGrid">
+        <div class="product-card" data-category="bowls"><img src="bowl1.jpeg" alt="Item 1"><div class="product-info"><h5>ITEM 1</h5><h4>Vintage Floral Basin</h4><p>Bowls</p></div></div>
+        <div class="product-card" data-category="bowls"><img src="bowl14.jpeg" alt="Item 2"><div class="product-info"><h5>ITEM 2</h5><h4>Heart Bowl</h4><p>Bowls</p></div></div>
+        <div class="product-card" data-category="bowls"><img src="bowl2.jpeg" alt="Item 3"><div class="product-info"><h5>ITEM 3</h5><h4>Petal Swirl Bowl</h4><p>Bowls</p></div></div>
+        <div class="product-card" data-category="bowls"><img src="bowl3.jpeg" alt="Item 4"><div class="product-info"><h5>ITEM 4</h5><h4>Morning Dew Cereal Bowl</h4><p>Bowls</p></div></div>
+        <div class="product-card" data-category="plates"><img src="bowl4.jpeg" alt="Item 5"><div class="product-info"><h5>ITEM 5</h5><h4>Sky-Blue Dip Plate</h4><p>Plates</p></div></div>
+        <div class="product-card" data-category="cups"><img src="cup2.jpeg" alt="Item 6"><div class="product-info"><h5>ITEM 6</h5><h4>Floral Dream Cups</h4><p>Cup</p></div></div>
+        <div class="product-card" data-category="bowls"><img src="bowl18.jpeg" alt="Item 7"><div class="product-info"><h5>ITEM 7</h5><h4>Botanical Grace Bowl</h4><p>Bowls</p></div></div>
+        <div class="product-card" data-category="bowls"><img src="bowl19.jpeg" alt="Item 8"><div class="product-info"><h5>ITEM 8</h5><h4>The Moomoo Basin</h4><p>Bowls</p></div></div>
+        <div class="product-card" data-category="bowls"><img src="bowl20.jpeg" alt="Item 9"><div class="product-info"><h5>ITEM 9</h5><h4>Blossom Basin</h4><p>Bowls</p></div></div>
+        <div class="product-card" data-category="bowls"><img src="bowl21.jpeg" alt="Item 10"><div class="product-info"><h5>ITEM 10</h5><h4>The Moomoo Basin 2</h4><p>Bowls</p></div></div>
+        <div class="product-card" data-category="cups"><img src="cup1.jpeg" alt="Item 11"><div class="product-info"><h5>ITEM 11</h5><h4>The Blush HeartLatte</h4><p>Cup</p></div></div>
+        <div class="product-card" data-category="cups"><img src="cup4.jpeg" alt="Item 12"><div class="product-info"><h5>ITEM 12</h5><h4>The Blush HeartLatte 2</h4><p>Cup</p></div></div>
+        <div class="product-card" data-category="cups"><img src="cup7.jpeg" alt="Item 13"><div class="product-info"><h5>ITEM 13</h5><h4>Espresso Cup</h4><p>Cup</p></div></div>
+        <div class="product-card" data-category="cups"><img src="cup8.jpeg" alt="Item 14"><div class="product-info"><h5>ITEM 14</h5><h4>Wild Morning Cup</h4><p>Cup</p></div></div>
+        <div class="product-card" data-category="cups"><img src="cup9.jpeg" alt="Item 15"><div class="product-info"><h5>ITEM 15</h5><h4>The Cozy Library Cup</h4><p>Cup</p></div></div>
+        <div class="product-card" data-category="cups"><img src="cup10.jpeg" alt="Item 16"><div class="product-info"><h5>ITEM 16</h5><h4>Red Ribbon Coquette Cup</h4><p>Cup</p></div></div>
+        <div class="product-card" data-category="cups"><img src="cup11.jpeg" alt="Item 17"><div class="product-info"><h5>ITEM 17</h5><h4>Meadow Breeze Cup</h4><p>Cup</p></div></div>
+        <div class="product-card" data-category="cups"><img src="cup12.jpeg" alt="Item 18"><div class="product-info"><h5>ITEM 18</h5><h4>Ribbon Romance</h4><p>Cup</p></div></div>
+        <div class="product-card" data-category="magnets"><img src="cup14.jpeg" alt="Item 19"><div class="product-info"><h5>ITEM 19</h5><h4>Peony Petal</h4><p>Fridge Magnets</p></div></div>
+        <div class="product-card" data-category="magnets"><img src="mag1.jpeg" alt="Item 20"><div class="product-info"><h5>ITEM 20</h5><h4>Rose Cameo</h4><p>Fridge Magnets</p></div></div>
+        <div class="product-card" data-category="cups"><img src="cup16.jpeg" alt="Item 21"><div class="product-info"><h5>ITEM 21</h5><h4>Peeping Pup Cup</h4><p>Cup</p></div></div>
+        <div class="product-card" data-category="organisers"><img src="jew.jpeg" alt="Item 22"><div class="product-info"><h5>ITEM 22</h5><h4>Velvet Bloom</h4><p>Jewellery Organisers</p></div></div>
+        <div class="product-card" data-category="organisers"><img src="jew1.jpeg" alt="Item 23"><div class="product-info"><h5>ITEM 23</h5><h4>Lace Tower</h4><p>Jewellery Organisers</p></div></div>
+        <div class="product-card" data-category="organisers"><img src="jew2.jpeg" alt="Item 24"><div class="product-info"><h5>ITEM 24</h5><h4>The Bestie Pedestal</h4><p>Jewellery Organisers</p></div></div>
+        <div class="product-card" data-category="organisers"><img src="jew3.jpeg" alt="Item 25"><div class="product-info"><h5>ITEM 25</h5><h4>Golden Rim Ring Dish</h4><p>Jewellery Organisers</p></div></div>
+        <div class="product-card" data-category="organisers"><img src="jew4.jpeg" alt="Item 26"><div class="product-info"><h5>ITEM 26</h5><h4>Mystic Moon Jewellery Dish</h4><p>Jewellery Organisers</p></div></div>
+        <div class="product-card" data-category="organisers"><img src="jew5.jpeg" alt="Item 27"><div class="product-info"><h5>ITEM 27</h5><h4>Wildflower Haven</h4><p>Jewellery Organisers</p></div></div>
+        <div class="product-card" data-category="plates"><img src="plate5.jpeg" alt="Item 28"><div class="product-info"><h5>ITEM 28</h5><h4>Spring Harvest Platter</h4><p>Plates</p></div></div>
+        <div class="product-card" data-category="plates"><img src="plate6.jpeg" alt="Item 29"><div class="product-info"><h5>ITEM 29</h5><h4>Victorian Lace Plate</h4><p>Plates</p></div></div>
+        <div class="product-card" data-category="plates"><img src="plate7.jpeg" alt="Item 30"><div class="product-info"><h5>ITEM 30</h5><h4>Tuscan Orchard Plate</h4><p>Plates</p></div></div>
+        <div class="product-card" data-category="plates"><img src="plate8.jpeg" alt="Item 31"><div class="product-info"><h5>ITEM 31</h5><h4>Pressed Blossom</h4><p>Plates</p></div></div>
+        <div class="product-card" data-category="magnets"><img src="mag2.jpeg" alt="Item 32"><div class="product-info"><h5>ITEM 32</h5><h4>Miniature Fruit Basket</h4><p>Fridge Magnets</p></div></div>
+        <div class="product-card" data-category="magnets"><img src="mag3.jpeg" alt="Item 33"><div class="product-info"><h5>ITEM 33</h5><h4>Violet Keepsake</h4><p>Fridge Magnets</p></div></div>
+        <div class="product-card" data-category="magnets"><img src="mag5.jpeg" alt="Item 34"><div class="product-info"><h5>ITEM 34</h5><h4>Meadow Charm</h4><p>Fridge Magnets</p></div></div>
+        <div class="product-card" data-category="magnets"><img src="mag6.jpeg" alt="Item 35"><div class="product-info"><h5>ITEM 35</h5><h4>Lavender Dream</h4><p>Fridge Magnets</p></div></div>
+        <div class="product-card" data-category="magnets"><img src="mag7.jpeg" alt="Item 36"><div class="product-info"><h5>ITEM 36</h5><h4>Forget-Me-Not</h4><p>Fridge Magnets</p></div></div>
+        <div class="product-card" data-category="magnets"><img src="mag8.jpeg" alt="Item 37"><div class="product-info"><h5>ITEM 37</h5><h4>Ceramic Sunflower Magnet</h4><p>Fridge Magnets</p></div></div>
+        <div class="product-card" data-category="magnets"><img src="mag9.jpeg" alt="Item 38"><div class="product-info"><h5>ITEM 38</h5><h4>Tiny Toaster Magnet</h4><p>Fridge Magnets</p></div></div>
+        <div class="product-card" data-category="plates"><img src="plate1.jpeg" alt="Item 39"><div class="product-info"><h5>ITEM 39</h5><h4>Golden Sun-ray Plate</h4><p>Plates</p></div></div>
+        <div class="product-card" data-category="plates"><img src="plate2.jpeg" alt="Item 40"><div class="product-info"><h5>ITEM 40</h5><h4>Azure Cloud Platter</h4><p>Plates</p></div></div>
+        <div class="product-card" data-category="plates"><img src="plate3.jpeg" alt="Item 41"><div class="product-info"><h5>ITEM 41</h5><h4>Rose Garden</h4><p>Plates</p></div></div>
+        <div class="product-card" data-category="plates"><img src="plate4.jpeg" alt="Item 42"><div class="product-info"><h5>ITEM 42</h5><h4>Berry Brunch Divide</h4><p>Plates</p></div></div>
+    </section>
+
+    <a href="#" id="backToTop">↑</a>
+    <a href="https://wa.me/8169701271?text=Hi%20Mangne!%20I'm%20interested%20in%20your%20collection."
+        class="whatsapp-float" target="_blank">
+        <svg width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.06 3.973L0 16l4.204-1.102a7.934 7.934 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93a7.898 7.898 0 0 0-2.327-5.607zM7.994 14.52a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z" />
+        </svg>
+    </a>
+
+    <div class="buy-notice-bar">
+        🛍️ To purchase any product, please contact us on
+        <a href="https://wa.me/8169701271">WhatsApp</a>
+    </div>
+<footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section about">
+            <h2 class="footer-logo">MANGNE</h2>
+            <p>Moments That Stick - Handcrafted ceramic treasures designed to bring joy to your everyday rituals.</p>
+        </div>
+        
+        <div class="footer-section links">
+            <h3>Quick Links</h3>
+            <ul>
+                <li><a href="#" onclick="filterCategory('all')">Collection</a></li>
+                <li><a href="#" onclick="filterCategory('cups')">Cups & Mugs</a></li>
+                <li><a href="#" onclick="filterCategory('bowls')">Bowls</a></li>
+                <li><a href="https://wa.me/8169701271">Contact Us</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-section social">
+            <h3>Follow Our Journey</h3>
+            <div class="social-icons">
+                <a href="#">Instagram</a>
+                <a href="#">Pinterest</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer-bottom">
+        &copy; 2026 MANGNE Ceramics | Crafted with Love
+    </div>
+</footer>
+    <script>
+        // Preloader Logic
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                document.documentElement.classList.add('loaded-state');
+                document.body.style.overflow = "auto";
+            }, 3000);
+        });
+
+        // Search Logic
+        document.getElementById('searchInput').addEventListener('keyup', function () {
+            let filterText = this.value.toLowerCase();
+            let cards = document.querySelectorAll('.product-card');
+            cards.forEach(card => {
+                let title = card.querySelector('h4').innerText.toLowerCase();
+                card.classList.toggle('hidden', !title.includes(filterText));
+            });
+        });
+
+        // Category Filter Logic
+        function filterCategory(category) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            let cards = document.querySelectorAll('.product-card');
+            cards.forEach(card => {
+                const match = (category === 'all' || card.getAttribute('data-category') === category);
+                card.classList.toggle('hidden', !match);
+            });
+        }
+    </script>
+</body>
+
+</html>
